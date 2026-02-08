@@ -54,3 +54,34 @@ FROM Employees AS E
 JOIN Orders AS O ON E.EmployeeID = O.EmployeeID
 GROUP BY E.EmployeeID, E.FirstName, E.LastName
 ORDER BY NumberOfOrders DESC;
+
+-- Query #9: Count orders per customer
+SELECT C.CustomerID, C.CompanyName, 
+COUNT(O.OrderId) AS NumberOfOrders
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID, C.CompanyName
+ORDER BY NumberOfOrders DESC;
+
+-- Query #10: Calculate total revenue per order
+SELECT OrderId, ROUND(SUM(UnitPrice * Quantity * (1 - Discount)), 2) AS TotalRevenue
+FROM [Order Details]
+GROUP BY OrderID
+ORDER BY TotalRevenue DESC;
+
+-- Query #11: Filer orders by year
+SELECT OrderID, CustomerID, OrderDate
+FROM Orders
+WHERE YEAR(OrderDate) = 1997
+ORDER BY OrderDate;
+
+-- Query #12: Get total revenue for each customer in the year 1997, and how many orders did they place?
+SELECT TOP 10 C.CustomerID, C.CompanyName, 
+COUNT(DISTINCT O.OrderID) AS TotalOrders, 
+ROUND(SUM(OD.UnitPrice * OD.Quantity * (1 - OD.Discount)), 2) AS TotalRevenue
+FROM Customers C 
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN [Order Details] OD ON O.OrderID = OD.OrderID
+WHERE YEAR(O.OrderDate) = 1997
+GROUP BY C.CustomerID, C.CompanyName
+ORDER BY TotalRevenue DESC;
