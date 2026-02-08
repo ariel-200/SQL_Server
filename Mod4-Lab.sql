@@ -76,9 +76,9 @@ WHERE YEAR(OrderDate) = 1997
 ORDER BY OrderDate;
 
 -- Query #12: Get total revenue for each customer in the year 1997, and how many orders did they place?
-SELECT TOP 10 C.CustomerID, C.CompanyName, 
-COUNT(DISTINCT O.OrderID) AS TotalOrders, 
-ROUND(SUM(OD.UnitPrice * OD.Quantity * (1 - OD.Discount)), 2) AS TotalRevenue
+SELECT TOP 10 C.CustomerID, C.CompanyName,
+ROUND(SUM(OD.UnitPrice * OD.Quantity * (1 - OD.Discount)), 2) AS TotalRevenue,
+COUNT(DISTINCT O.OrderID) AS TotalOrders
 FROM Customers C 
 JOIN Orders O ON C.CustomerID = O.CustomerID
 JOIN [Order Details] OD ON O.OrderID = OD.OrderID
