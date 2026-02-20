@@ -106,3 +106,82 @@ SET Price = 14.99
 WHERE BookID = 1;
 
 SELECT * FROM BookPriceAudit;
+
+-- Create BookReviews Table
+CREATE TABLE BookReviews (
+    ReviewID INT PRIMARY KEY,
+    BookID INT,
+    CustomerID NCHAR(5),
+    Rating INT CHECK (Rating BETWEEN 1 AND 5),
+    ReviewText NVARCHAR(MAX),
+    ReviewDate DATE,
+    FOREIGN KEY (BookID) REFERENCES Books(BookID),
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+
+SELECT * FROM BookReviews;
+
+-- Create view to show book review stats
+CREATE VIEW BookReviewStats AS
+    SELECT b.Title, 
+    COUNT(br.ReviewID) AS TotalReviews,
+    AVG(br.Rating) AS AverageRating, 
+    MAX(br.ReviewDate) AS RecentReviewDate
+    FROM Books b
+    JOIN BookReviews br ON b.BookID = br.BookID
+    GROUP BY b.Title;
+
+SELECT * FROM BookReviewStats;
+
+-- Create a trigger that prevents reviews being added with future dates
+CREATE TRIGGER ValidateReviewDate
+ON BookReviews
+INSTEAD OF INSERT
+AS
+BEGIN
+    -- Insert only rows where ReviewDate is not in the future
+    INSERT INTO BookReviews (ReviewID, BookID, CustomerID, Rating, ReviewText, ReviewDate)
+    SELECT ReviewID, BookID, CustomerID, Rating, ReviewText, ReviewDate
+    FROM inserted
+    WHERE ReviewDate <= GETDATE();
+END;
+
+-- Add an AverageRating column to the Books table
+ALTER TABLE Books
+ADD AverageRating DECIMAL(3,2);
+
+-- Create a trigger that updates the books average rating when reviews are updated
+CREATE TRIGGER UpdateBookRating
+ON BookReviews
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    UPDATE Books
+    SET AverageRating = (
+        SELECT AVG(Rating)
+        FROM BookReviews
+        WHERE BookReviews.BookID = Books.BookID
+    );
+END;
+
+-- Insert data into BookReviews
+INSERT INTO BookReviews (ReviewID, BookID, CustomerID, Rating, ReviewText, ReviewDate)
+VALUES 
+(1, 1, 'ALFKI', 5, 'Excellent classic novel.', '2026-02-10'),
+(2, 2, 'ANATR', 4, 'Very interesting and thought-provoking.', '2026-02-12'),
+(3, 3, 'ANTON', 5, 'Really enjoyable and magical story.', '2026-02-15'),
+(4, 4, 'AROUT', 5, 'This review is from the future.', '2030-01-01');
+
+SELECT * FROM BookReviews
+WHERE ReviewID = 4;
+
+SELECT * FROM BookReviews;
+SELECT * FROM Books;
+
+-- Update a review rating
+UPDATE BookReviews
+SET Rating = 2
+WHERE ReviewID = 1;
+
+SELECT * FROM BookReviews;
+SELECT * FROM Books;
